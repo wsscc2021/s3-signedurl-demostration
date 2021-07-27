@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <title>Image</title>
+</head>
+<body>
+    <div id="main">
+        <h1>Image uploader</h1>
+        <p>This page is created to s3 pre-signed-url demostration.</p>
+        <p>And it work with serverless architecture that generate signed-url</p>
+        <form>
+            <input type="file" id="uploadFile"></input>
+            <input type="button" id="uploadButton" onclick="upload_func();" value="upload"></input>
+        </form>
+    </div>
+    <div id="result">
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+</body>
+</html>
