@@ -12,7 +12,7 @@ function readFileAsData(event) {
     }
     var reader = new FileReader();
     reader.onload = function(event) {
-        if (!uploadFileSize) {
+        if (uploadFileSize <= 0) {
             return;
         }
         uploadFileName = files[0].name;
@@ -29,7 +29,7 @@ function readFileAsData(event) {
 }
 
 const upload_func = async () => {
-    if (!uploadFileSize) {
+    if (uploadFileSize <= 0) {
         alert("최소 0KB 이상의 파일만 업로드할 수 있습니다.");
     } else {
         let signedURL = await getSignedURL();
