@@ -31,20 +31,19 @@ function readFileAsData(event) {
 const upload_func = async () => {
     if (!uploadFileSize) {
         alert("최소 0KB 이상의 파일만 업로드할 수 있습니다.");
-        return;
+    } else {
+        let signedURL = await getSignedURL();
+        uploadToS3(signedURL);
     }
-    let signedURL = await getSignedURL();
-    uploadToS3(signedURL);
 }
 
-const getSignedURL = (s3Action) => {
+const getSignedURL = () => {
     let apiGatewayURL = "https://wwuz8911u1.execute-api.us-east-1.amazonaws.com/demo"
     return fetch(apiGatewayURL, {
         method: "POST",
         body: JSON.stringify({
             fileName: uploadFileName,
-            fileType: uploadFileType,
-            s3Action: s3Action
+            fileType: uploadFileType
         })
     }).then(response => response.json())
     .then(data => {
