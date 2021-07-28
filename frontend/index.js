@@ -1,33 +1,74 @@
-function upload_func() {
-    let uploadFile = $('#uploadFile').get()[0].files[0];
-    let signedURL = get_signed_url(uploadFile.name)
+let uploadFileBlobData
+let uploadFileName
+let uploadFileType
+let uploadFileSize
+
+document.getElementById('uploadFile').addEventListener('change', readFileAsData);
+function readFileAsData(event) {
+    var files = this.files;
+    if (files.length === 0) {
+        console.log('No file is selected');
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(event) {
+        if (!uploadFileSize) {
+            return;
+        }
+        uploadFileName = files[0].name;
+        uploadFileType = files[0].type;
+        var uploadFileBase64 = event.target.result.split(',')[1]
+        var uploadFileBinary = atob(uploadFileBase64);
+        let uploadFileBinaryUnicode = [];
+        for (var i = 0; i < uploadFileBinary.length; i++) {
+            uploadFileBinaryUnicode.push(uploadFileBinary.charCodeAt(i));
+        }
+        uploadFileBlobData = new Blob([new Uint8Array(uploadFileBinaryUnicode)], {type: uploadFileType});
+    };
+    reader.readAsDataURL(files[0]);
 }
 
-function get_signed_url(fileName) {
-    $.ajax({
-        type : "GET",
-        url  : "https://waw9vt6yi0.execute-api.us-east-1.amazonaws.com/demo",
-        data : {fileName : fileName},
-        success : function(res){
-            // 응답코드 > 0000
-            return res;
-        },
-        error : function(XMLHttpRequest, status, error){ // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
-            alert("실패!")
-        }
+const upload_func = async () => {
+    if (!uploadFileSize) {
+        alert("최소 0KB 이상의 파일만 업로드할 수 있습니다.");
+        return;
+    }
+    let signedURL = await getSignedURL();
+    uploadToS3(signedURL);
+}
+
+const getSignedURL = (s3Action) => {
+    let apiGatewayURL = "https://wwuz8911u1.execute-api.us-east-1.amazonaws.com/demo"
+    return fetch(apiGatewayURL, {
+        method: "POST",
+        body: JSON.stringify({
+            fileName: uploadFileName,
+            fileType: uploadFileType,
+            s3Action: s3Action
+        })
+    }).then(response => response.json())
+    .then(data => {
+        return JSON.parse(data['body']).signedURL;
+    }).catch(error => {
+        console.log(error);
+        alert("Pre-Signing 실패!");
+        return false
     });
 }
 
-// function s3_upload(signedURL, uploadFile) {
-//     $.ajax({
-//         type : "PUT",
-//         url  : signedURL,
-//         success : function(res){
-//             // 응답코드 > 0000
-//             return res;
-//         },
-//         error : function(XMLHttpRequest, status, error){ // 비동기 통신이 실패할경우 error 콜백으로 들어옵니다.
-//             return error;
-//         }
-//     });
-// }
+const uploadToS3 = (signedURL) => {
+    fetch(signedURL, {
+        method: "PUT",
+        body: uploadFileBlobData
+    }).then(response => {
+        const statusCode = response.status
+        if (statusCode >= 200 && statusCode < 400) {
+            alert("업로드가 완료되었습니다.");
+        } else if (statusCode >= 400 && statusCode < 600) {
+            throw response;
+        }
+    }).catch(error => {
+        console.log(error);
+        alert("업로드 실패!");
+    });
+}
